@@ -30,3 +30,13 @@ test('soft leaves take priority over dry soil',()=>{
 test('all 60 soil, leaf and drain combinations produce guidance',()=>{
  for(const soil of ['unknown','wet','moist','dry'])for(const leaf of ['unknown','normal','wrinkled','soft','yellow'])for(const drain of ['unknown','yes','no'])assert.ok(careAdvice({soil,leaf,drain,last:''}).length>=2);
 });
+
+test('non-plant result requests a new succulent photo without diagnosis',async()=>{
+ const {resultSummary}=await import('../assets/doctor.js');
+ const result=resultSummary([{index:5,score:.895},{index:3,score:.042}]);
+ assert.equal(result.nonPlant,true);assert.equal(result.uncertain,true);
+ assert.equal(result.title,'다육이 사진을 업로드해 주세요');
+ assert.match(result.note,/다시 선택/);
+ const close=resultSummary([{index:0,score:.4},{index:1,score:.36}]);
+ assert.equal(close.nonPlant,false);assert.equal(close.uncertain,true);
+});
