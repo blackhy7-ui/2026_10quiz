@@ -8,7 +8,7 @@ const errors=[];page.on('pageerror',e=>errors.push(e.message));
 const remote=[];page.on('request',r=>{if(!r.url().startsWith('http://127.0.0.1'))remote.push(r.url())});
 await page.goto(base);
 await page.screenshot({path:'/tmp/succulent-home.png',fullPage:true});
-assert.match(await page.locator('h1').textContent(),/AI 식물 주치의/);
+assert.match(await page.locator('h1').textContent(),/내 다육이를/);
 assert.equal(await page.locator('main a[href="#booth"]').count(),1);
 await page.goto(base+'/#ticket');assert.match(await page.locator('h1').textContent(),/체험권을 받아요/);
 for(const level of ['elementary','secondary']){
