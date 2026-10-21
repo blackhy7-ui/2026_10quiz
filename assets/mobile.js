@@ -26,8 +26,8 @@ export function mountMobileDoctor(){
  const record=document.createElement('section');record.className='card';record.innerHTML='<h2>물주기 기록</h2><p class="muted">실제로 물을 준 날에만 기록해요. 날짜만 보고 물주기를 결정하지 않아요.</p>';
  record.append(document.getElementById('water').parentElement,document.getElementById('water-history'),document.getElementById('saved'));page('기록·삭제',record);
  const groups=[...guide.querySelector('.cards').children];
- const guideIntro=document.createElement('section');guideIntro.className='card';guideIntro.innerHTML='<h2>우리 다육이 외형 안내</h2><p>6가지 외형을 직접 비교해요. AI 종류 판별 결과가 아니며 정확한 품종은 사진만으로 확정할 수 없어요.</p><img class="guide-plant" src="assets/succulent-garden.webp" alt="세 화분의 다육식물">';page('외형 안내 시작',guideIntro);
- groups.forEach((g,i)=>{const card=document.createElement('section');card.className='card';card.innerHTML=`<span class="tag">외형 안내 ${i+1} / 6</span>`;card.append(g);card.insertAdjacentHTML('beforeend','<p class="muted">비슷한 교배종이 많아요. 이름표나 판매처 정보로 확인해 주세요.</p>');page(`외형 ${String.fromCharCode(65+i)}`,card)});
+ const guideIntro=document.createElement('section');guideIntro.className='card';guideIntro.innerHTML='<h2>부스 다육이 6가지</h2><p>어제 제공한 부스 식물 자료를 바탕으로 그림과 관리법을 모았어요. 그림은 설명용 삽화이며 이름은 외형별 후보예요. 정확한 품종은 이름표로 확인해요.</p><img class="guide-plant" src="assets/succulent-garden.webp" alt="세 화분의 다육식물">';page('외형 안내 시작',guideIntro);
+ groups.forEach((g,i)=>{const card=document.createElement('section');card.className='card';card.innerHTML=`<span class="tag">외형 안내 ${i+1} / 6</span>`;card.append(g);page(`부스 다육이 ${String.fromCharCode(65+i)} · 관리법`,card)});
  const tips=document.createElement('section');tips.className='card';tips.innerHTML='<h2>함께 기억할 관리법</h2>';tips.append(guide.querySelector('.checklist'),guide.lastElementChild);page('기본 관리법',tips);
  const about=document.createElement('section');about.className='card';about.innerHTML='<h2>사진 분석 안내</h2>';about.append(disclaimer);page('분석의 한계',about);page('사진 분석 실행',analysis);
  cards.replaceWith(root);guide.remove();form.remove();app.querySelector('.footer')?.remove();
