@@ -34,6 +34,7 @@ for(let i=0;i<7;i++){
 await page.goto(base+'/#gift');assert.match(await page.locator('main').textContent(),/쿠폰 제출하고 선물 받기/);
 assert.equal(remote.length,0,'no external requests for booth or quiz');
 await page.goto(base+'/#doctor');await page.waitForFunction(()=>document.querySelector('#care').onclick!==null);
+await page.locator('[data-section=water]').click();
 const doctorMenu=page.locator('.doctor-page-menu select');
 await doctorMenu.selectOption('1');await page.locator('#soil').selectOption('wet');
 await doctorMenu.selectOption('2');await page.locator('#leaf').selectOption('wrinkled');await page.locator('#care').click();assert.match(await page.locator('#care-result').textContent(),/지금은 물을 더 주지 말고/);
@@ -42,7 +43,7 @@ await doctorMenu.selectOption('2');await page.locator('#drain').selectOption('no
 await doctorMenu.selectOption('1');await page.locator('#last').fill('2099-01-01');await doctorMenu.selectOption('2');await page.locator('#care').click();assert.equal(await page.locator('#last').evaluate(e=>e.checkValidity()),false);
 await page.locator('#last').fill('');
 await page.screenshot({path:'/tmp/succulent-doctor.png',fullPage:true});
-await doctorMenu.selectOption('0');await page.locator('#photo').setInputFiles({name:'not-image.txt',mimeType:'text/plain',buffer:Buffer.from('hi')});assert.match(await page.locator('#ai-status').textContent(),/사진 파일/);
+await page.locator('.section-back').click();await page.locator('[data-section=kinds]').click();await page.locator('.photo-entry').click();await doctorMenu.selectOption('0');await page.locator('#photo').setInputFiles({name:'not-image.txt',mimeType:'text/plain',buffer:Buffer.from('hi')});assert.match(await page.locator('#ai-status').textContent(),/사진 파일/);
 await page.locator('#photo').setInputFiles('/tmp/succulent-home.png');await page.waitForFunction(()=>!document.querySelector('#analyze').disabled);
 await doctorMenu.selectOption('15');await page.locator('#analyze').click();
 await page.waitForFunction(()=>!document.querySelector('#analyze').disabled,{},{timeout:120000});
