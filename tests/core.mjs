@@ -30,4 +30,3 @@ test('soft leaves take priority over dry soil',()=>{
 test('all 60 soil, leaf and drain combinations produce guidance',()=>{
  for(const soil of ['unknown','wet','moist','dry'])for(const leaf of ['unknown','normal','wrinkled','soft','yellow'])for(const drain of ['unknown','yes','no'])assert.ok(careAdvice({soil,leaf,drain,last:''}).length>=2);
 });
-
