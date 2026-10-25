@@ -1,0 +1,46 @@
+import {boothPlants} from './plants.js?v=0a855710d412';
+const today=()=>{const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`};
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+export function careAdvice({soil,leaf,drain,last}){
+ const lines=[];
+ // Guidance uses user observations and never dates alone.
+ if(leaf==='soft'||leaf==='yellow')lines.push('잎이 물렁하거나 변색했다면 과습 외에도 여러 원인이 있을 수 있어요. 물을 바로 추가하지 말고 잎·줄기·배수 상태를 확인하고, 증상이 번지면 운영자나 식물 전문가에게 물어보세요.');
+ else if(soil==='wet'||soil==='moist')lines.push('흙에 수분이 남아 있어요. 지금은 물을 더 주지 말고 속흙이 마르는지 살펴보세요. 주름이 있어도 물 부족으로 단정하지 않아요.');
+ else if(soil==='dry')lines.push(leaf==='wrinkled'?'속흙이 마르고 직접 확인한 잎에 주름이 있어요. 물주기를 고려하되 배수구·뿌리 상태·계절을 먼저 확인해요.':'속흙이 말랐어도 바로 물을 줄 필요가 있다고 단정할 수 없어요. 잎의 탄력과 식물 종류, 생장기인지 함께 살펴보세요.');
+ else lines.push('먼저 속흙을 확인해요. 나무젓가락 등으로 안쪽까지 말랐는지 살펴보고, 확인이 어렵다면 물을 서둘러 추가하지 않아요.');
+ if(drain==='no')lines.push('배수구가 없으면 물이 고이기 쉬워요. 배수 가능한 화분으로 옮기는 방법을 어른과 상의해요.');else if(drain==='unknown')lines.push('화분 바닥에 배수구가 있는지 먼저 확인해 주세요.');else lines.push('물줄 조건이 맞을 때는 배수구로 물이 빠지도록 주고, 받침에 고인 물은 버려요.');
+
+ if(last){const days=Math.round((new Date(today()+'T12:00:00')-new Date(last+'T12:00:00'))/86400000);if(Number.isFinite(days)&&days>=0)lines.push(`마지막 물주기 후 ${days}일이 지났어요. 지난 날짜만으로 다음 물주기를 정하지 않아요.`)}
+ return lines;
+}
+export function mountCare(app){
+ const KEY='succulent-care-v3';let data={plant:'a',name:'',last:'',soil:'unknown',leaf:'unknown',drain:'unknown',logs:[]},storageOK=true,view='home',historyPage=0;
+ try{const stored=JSON.parse(localStorage.getItem(KEY))||JSON.parse(localStorage.getItem('succulent-home-v2'))||JSON.parse(localStorage.getItem('succulent-care-v1'));if(stored&&typeof stored==='object')data={...data,...stored}}catch{storageOK=false}
+ if(!boothPlants.some(p=>p.id===data.plant))data.plant='a';data.logs=Array.isArray(data.logs)?data.logs.filter(x=>typeof x==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(x)).slice(0,50):[];data.name=typeof data.name==='string'?data.name.slice(0,30):'';if(!/^\d{4}-\d{2}-\d{2}$/.test(data.last)||data.last>today())data.last='';
+ for(const key of ['soil','leaf','drain'])if(typeof data[key]!=='string')data[key]='unknown';
+ function save(){try{localStorage.setItem(KEY,JSON.stringify(data));storageOK=true}catch{storageOK=false}const msg=app.querySelector('#save-state');if(msg)msg.textContent=storageOK?'자동 저장됨 · 이 기기에만 보관':'저장하지 못했어요. 창을 닫으면 기록이 사라질 수 있어요.'}
+ function selected(){return boothPlants.find(p=>p.id===data.plant)}
+ function elapsed(){return data.last?Math.max(0,Math.round((new Date(today()+'T12:00:00')-new Date(data.last+'T12:00:00'))/86400000)):null}
+ const options=(list,value)=>list.map(([v,t])=>`<option value="${v}" ${v===value?'selected':''}>${t}</option>`).join('');
+ function shell(title,content){app.innerHTML=`<div class="care-app"><div class="care-topline"><a href="#home">← 처음으로</a><span>우리 집 초록 생활</span></div><h1 class="care-title">${title}</h1>${content}<div class="care-tabs" aria-label="관리 메뉴"><button type="button" data-view="home" ${view==='home'?'aria-current="page"':''}>🪴 내 다육이</button><button type="button" data-view="check" ${view==='check'||view==='result'?'aria-current="page"':''}>💧 물주기 확인</button><button type="button" data-view="guide" ${view==='guide'?'aria-current="page"':''}>☀️ 관리법</button></div><p id="save-state" class="care-storage" role="status">${storageOK?'기록은 이 기기에만 저장돼요.':'저장소를 사용할 수 없어요. 현재 화면에서만 이용할 수 있어요.'}</p></div>`;app.querySelectorAll('[data-view]').forEach(b=>b.onclick=()=>render(b.dataset.view));window.scrollTo(0,0)}
+ function render(next=view){view=next;const plant=selected(),days=elapsed();
+ if(view==='home'){
+ shell('우리 다육이, 잘 지내나요?',`<section class="care-pet"><img src="assets/plant-${plant.id}.webp" alt="${esc(plant.title.slice(4))} 설명용 삽화"><div><span class="care-eyebrow">MY LITTLE PLANT</span><h2>${esc(data.name||'나의 다육이')}</h2><p>${plant.title.slice(4)}</p><button class="care-text" id="choose">다육이 선택·이름 바꾸기 →</button></div></section><section class="care-water-card"><div class="care-stat"><span>마지막 물주기</span><b>${days===null?'아직 기록이 없어요':days===0?'오늘 물을 줬어요':`${days}일 전 물을 줬어요`}</b></div><label for="last">물 준 날짜 직접 입력</label><input type="date" id="last" max="${today()}" value="${esc(data.last)}"><p>날짜보다 속흙과 잎 상태가 중요해요.</p><button type="button" class="btn" id="water">💧 오늘 실제로 물 줬어요</button></section><div class="care-home-links"><button type="button" class="care-link" data-view="check">지금 물 줘도 될까요? <b>→</b></button><button type="button" class="care-link" data-view="history">지난 물주기 기록 <b>→</b></button></div>`);
+ app.querySelector('#choose').onclick=()=>render('choose');app.querySelector('#last').onchange=e=>{if(e.target.value>today()){e.target.setCustomValidity('미래 날짜는 입력할 수 없어요.');e.target.reportValidity();return}e.target.setCustomValidity('');data.last=e.target.value;save();render()};app.querySelector('#last').oninput=e=>e.target.setCustomValidity('');app.querySelector('#water').onclick=()=>{if(!confirm('오늘 실제로 물을 주었나요? 기록을 위해 물을 주지는 마세요.'))return;data.last=today();if(!data.logs.includes(data.last))data.logs.unshift(data.last);data.logs=data.logs.slice(0,50);save();render()};
+ }else if(view==='choose'){
+ shell('내 다육이를 골라 주세요',`<p class="care-intro">닮은 그림을 골라요. 그림은 설명용 삽화예요.</p><div class="care-plant-picker">${boothPlants.map(p=>`<button type="button" data-plant="${p.id}" aria-pressed="${data.plant===p.id}"><img src="assets/plant-${p.id}.webp" alt=""><span>${p.title.slice(4)}</span></button>`).join('')}</div><label for="pet-name">나만의 이름 (선택)</label><input id="pet-name" maxlength="30" value="${esc(data.name)}" placeholder="예: 초록이"><button type="button" class="btn care-wide" data-view="home">선택 완료 →</button>`);
+ app.querySelectorAll('[data-plant]').forEach(b=>b.onclick=()=>{data.plant=b.dataset.plant;save();render()});app.querySelector('#pet-name').oninput=e=>{data.name=e.target.value.slice(0,30);save()};
+ }else if(view==='check'){
+ shell('지금 물 줘도 될까요?',`<p class="care-intro">직접 확인한 상태로 골라 주세요. 날짜만으로 결정하지 않아요.</p><section class="care-observations"><label for="soil">🌱 속흙은 어떤가요?</label><select id="soil">${options([['unknown','아직 확인하지 않았어요'],['wet','젖어 있어요'],['moist','조금 촉촉해요'],['dry','속흙까지 충분히 말랐어요']],data.soil)}</select><label for="leaf">🌿 잎은 어떤가요?</label><select id="leaf">${options([['unknown','잘 모르겠어요'],['normal','단단하고 건강해 보여요'],['wrinkled','주름이 있거나 쭈글쭈글해요'],['soft','물렁하거나 반투명해요'],['yellow','누렇게 변했어요']],data.leaf)}</select><label for="drain">🪴 화분 밑에 배수구가 있나요?</label><select id="drain">${options([['unknown','잘 모르겠어요'],['yes','있어요'],['no','없어요']],data.drain)}</select></section><button type="button" class="btn care-wide" data-view="result">관리 안내 확인하기 →</button>`);for(const key of ['soil','leaf','drain'])app.querySelector('#'+key).onchange=e=>{data[key]=e.target.value;save()};
+ }else if(view==='result'){
+ const risk=['soft','yellow'].includes(data.leaf),wait=['wet','moist'].includes(data.soil);const title=risk?'상태 확인이 먼저예요':wait?'지금은 물을 기다려요':data.soil==='dry'?'물줄 조건을 확인해요':'먼저 속흙을 확인해요';
+ shell(title,`<section class="care-answer"><span class="care-answer-icon">${risk?'🌿':wait?'⏸':'💧'}</span><h2>${risk?'물을 서둘러 추가하지 않아요':wait?'흙에 수분이 남아 있어요':data.soil==='dry'?'마른 흙과 잎을 함께 살펴요':'겉흙 말고 안쪽까지 확인해요'}</h2><div class="care-answer-body">${careAdvice(data).map(t=>`<p>${t}</p>`).join('')}</div></section><button type="button" class="btn secondary care-wide" data-view="check">상태 다시 선택하기</button>`);
+ }else if(view==='guide'){
+ shell('매일 기억할 관리법',`<section class="care-guide"><img src="assets/plant-${plant.id}.webp" alt="설명용 다육이 삽화"><h2>${plant.title.slice(4)}</h2><dl>${[['☀️ 햇빛',plant.light],['💧 물주기',plant.water],['🌱 주의',plant.caution],['🪴 환경','배수구 있는 화분에 심고 통풍을 챙겨요. 서리와 여름 과열을 피해요.']].map(([k,v])=>`<div><dt>${k}</dt><dd>${v}</dd></div>`).join('')}</dl><p class="care-intro">외형에 따른 기본 안내예요. 정확한 종류·계절·뿌리 상태에 따라 달라질 수 있어요.</p></section>`);
+ }else if(view==='history'){
+ const count=Math.max(1,Math.ceil(data.logs.length/5));historyPage=Math.min(historyPage,count-1);
+ shell('물 준 날 모아 보기',`<p class="care-intro">‘오늘 실제로 물 줬어요’로 남긴 기록이에요.<br>직접 입력한 마지막 날짜는 홈에서 확인해요.</p><section class="care-history">${data.logs.length?data.logs.slice(historyPage*5,historyPage*5+5).map(d=>`<div>💧 <b>${esc(d)}</b><span>물주기 완료</span></div>`).join(''):'<p>아직 물주기 기록이 없어요.</p>'}</section><div class="care-history-controls"><button class="btn secondary" id="prev-history" ${historyPage===0?'disabled':''}>이전</button><span>${historyPage+1} / ${count}</span><button class="btn secondary" id="next-history" ${historyPage===count-1?'disabled':''}>다음</button></div><button type="button" id="clear-record" class="care-text">이 기기의 관리 기록 삭제</button>`);app.querySelector('#prev-history').onclick=()=>{historyPage--;render()};app.querySelector('#next-history').onclick=()=>{historyPage++;render()};app.querySelector('#clear-record').onclick=()=>{if(!confirm('물주기 기록과 선택한 상태를 삭제할까요?'))return;try{for(const k of [KEY,'succulent-home-v2','succulent-care-v1'])localStorage.removeItem(k);data={plant:'a',name:'',last:'',soil:'unknown',leaf:'unknown',drain:'unknown',logs:[]};storageOK=true;render('home')}catch{storageOK=false;render()}};
+ }
+ }
+ render();return ()=>{};
+}
